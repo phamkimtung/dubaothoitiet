@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Weather App</string>
+    <string name="search_hint">Nhập tên thành phố...</string>
+    <string name="search_button">Tìm kiếm</string>
+    <string name="location_button">Vị trí hiện tại</string>
+    <string name="enter_city_name">Vui lòng nhập tên thành phố</string>
+    <string name="city_not_found">Không tìm thấy thành phố: %s</string>
+    <string name="return_to_current_location">Quay lại vị trí hiện tại</string>
+</resources>

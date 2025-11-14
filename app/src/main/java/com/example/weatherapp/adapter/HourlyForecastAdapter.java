@@ -50,7 +50,6 @@ public class HourlyForecastAdapter extends RecyclerView.Adapter<HourlyForecastAd
                     .load(iconUrl)
                     .into(holder.weatherIcon);
 
-            // Hiển thị mô tả thời tiết ngắn
             holder.descTextView.setText(item.getWeather().get(0).getMain());
         }
     }

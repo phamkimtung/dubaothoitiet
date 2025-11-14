@@ -6,10 +6,12 @@
     android:background="#E3F2FD">
 
     <LinearLayout
+        android:id="@+id/rootLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Header với các nút -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,6 +26,16 @@
                 android:src="@drawable/ic_my_location"
                 android:contentDescription="Vị trí hiện tại"
                 android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/favoriteButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_toEndOf="@id/locationButton"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_favorite"
+                android:contentDescription="Thêm vào yêu thích" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -45,6 +57,7 @@
 
         </RelativeLayout>
 
+        <!-- Current Weather Section -->
         <LinearLayout
             android:id="@+id/currentWeatherLayout"
             android:layout_width="match_parent"
@@ -133,6 +146,7 @@
 
         </LinearLayout>
 
+        <!-- Nút bản đồ -->
         <Button
             android:id="@+id/mapButton"
             android:layout_width="match_parent"
@@ -143,7 +157,18 @@
             android:textColor="#FFFFFF"
             android:layout_marginBottom="16dp"
             android:padding="12dp" />
+        <!-- Trong RelativeLayout header, thêm nút danh sách yêu thích -->
+        <ImageButton
+            android:id="@+id/favoritesListButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_toEndOf="@id/favoriteButton"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_list"
+            android:contentDescription="Danh sách yêu thích" />
 
+        <!-- Hourly Forecast Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -158,6 +183,7 @@
             android:layout_height="120dp"
             android:layout_marginBottom="24dp" />
 
+        <!-- Daily Forecast Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

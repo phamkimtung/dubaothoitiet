@@ -1,19 +1,26 @@
 package com.example.weatherapp;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.weatherapp.adapter.DailyForecastAdapter;
@@ -21,6 +28,7 @@ import com.example.weatherapp.adapter.HourlyForecastAdapter;
 import com.example.weatherapp.api.WeatherApi;
 import com.example.weatherapp.model.WeatherResponse;
 import com.example.weatherapp.model.ForecastResponse;
+import com.example.weatherapp.service.WeatherNotificationService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -40,6 +48,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int SEARCH_REQUEST_CODE = 100;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 200;
 
     //vị trí GPS hiện tại của thiết bị
     private FusedLocationProviderClient fusedLocationClient;
@@ -47,8 +56,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView locationTextView, currentTempTextView, weatherDescTextView;
     private TextView humidityTextView, windTextView, sunriseTextView, sunsetTextView;
     private RecyclerView hourlyRecyclerView, dailyRecyclerView;
-    private ImageButton searchButton, locationButton;
+    private ImageButton searchButton, locationButton, favoriteButton;
     private Button mapButton;
+    private LinearLayout rootLayout;
 
     private HourlyForecastAdapter hourlyAdapter;
     private DailyForecastAdapter dailyAdapter;
@@ -57,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
     private double currentLat = 21.0285;
     private double currentLon = 105.8542;
     private boolean isUsingCurrentLocation = true;
+    private SharedPreferences favoritesPrefs;
+    private ImageButton favoritesListButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +80,46 @@ public class MainActivity extends AppCompatActivity {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         checkLocationPermission();
+        checkNotificationPermission();
+        startNotificationService();
+    }
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Giải thích lý do cần quyền notification
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Quyền thông báo")
+                            .setMessage("Ứng dụng cần quyền thông báo để gửi thông tin thời tiết hàng ngày và cảnh báo thời tiết quan trọng.")
+                            .setPositiveButton("Đồng ý", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    requestNotificationPermission();
+                                }
+                            })
+                            .setNegativeButton("Không", null)
+                            .show();
+                } else {
+                    requestNotificationPermission();
+                }
+            } else {
+                // Đã có quyền, khởi động service
+                startNotificationService();
+            }
+        } else {
+            // Android < 13 không cần xin quyền
+            startNotificationService();
+        }
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    NOTIFICATION_PERMISSION_REQUEST_CODE);
+        }
     }
 
     private void initViews() {
@@ -80,20 +133,36 @@ public class MainActivity extends AppCompatActivity {
         searchButton = findViewById(R.id.searchButton);
         locationButton = findViewById(R.id.locationButton);
         mapButton = findViewById(R.id.mapButton);
+        favoriteButton = findViewById(R.id.favoriteButton);
+        rootLayout = findViewById(R.id.rootLayout);
+        favoritesListButton = findViewById(R.id.favoritesListButton);
+
+        favoritesListButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, FavoriteCitiesActivity.class);
+                startActivityForResult(intent, SEARCH_REQUEST_CODE);
+            }
+        });
+
+        favoritesPrefs = getSharedPreferences("favorite_cities", MODE_PRIVATE);
 
         locationButton.setVisibility(View.GONE);
 
+        // Setup hourly RecyclerView
         hourlyRecyclerView = findViewById(R.id.hourlyRecyclerView);
         hourlyRecyclerView.setLayoutManager(new LinearLayoutManager(this,
                 LinearLayoutManager.HORIZONTAL, false));
         hourlyAdapter = new HourlyForecastAdapter(new ArrayList<>());
         hourlyRecyclerView.setAdapter(hourlyAdapter);
 
+        // Setup daily RecyclerView
         dailyRecyclerView = findViewById(R.id.dailyRecyclerView);
         dailyRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dailyAdapter = new DailyForecastAdapter(new ArrayList<>());
         dailyRecyclerView.setAdapter(dailyAdapter);
 
+        // Setup search button click
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Setup location button click
         locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -109,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Setup map button click
         mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,14 +189,39 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        // Setup favorite button click
+        favoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addCurrentCityToFavorites();
+            }
+        });
     }
 
+    private void startNotificationService() {
+        Intent serviceIntent = new Intent(this, WeatherNotificationService.class);
+        startService(serviceIntent);
+    }
+
+    private void addCurrentCityToFavorites() {
+        String currentCity = locationTextView.getText().toString();
+        if (!currentCity.isEmpty()) {
+            // Lưu thành phố hiện tại vào favorites
+            String cityKey = currentCity.split(",")[0].trim(); // Lấy tên thành phố
+            favoritesPrefs.edit().putString(cityKey, currentCity).apply();
+            Toast.makeText(this, "Đã thêm " + cityKey + " vào yêu thích", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //Quay lại vị trí hiện tại
     private void returnToCurrentLocation() {
         isUsingCurrentLocation = true;
         locationButton.setVisibility(View.GONE);
         checkLocationPermission();
     }
 
+    //chọn địa điểm mới trong SearchActivity và quay lại Mainactivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -142,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Kiểm tra xem người dùng đã cấp quyền truy cập vị trí chưa
     private void checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED &&
@@ -156,10 +253,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Kết quả sau khi xin quyền vị trí xong
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getCurrentLocation();
@@ -168,9 +267,19 @@ public class MainActivity extends AppCompatActivity {
                         Toast.LENGTH_LONG).show();
                 getWeatherData(currentLat, currentLon);
             }
+        } else if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Đã cấp quyền, khởi động service
+                startNotificationService();
+                Toast.makeText(this, "Đã bật thông báo thời tiết", Toast.LENGTH_SHORT).show();
+            } else {
+                // Từ chối quyền, vẫn chạy app nhưng không có notification
+                Toast.makeText(this, "Bạn sẽ không nhận được thông báo thời tiết", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
+    //Lấy tọa độ GPS hiện tại từ thiết bị.
     private void getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED &&
@@ -196,6 +305,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    //Lấy thời tiết hiện tại
     private void getWeatherData(double lat, double lon) {
         WeatherApi weatherApi = com.example.weatherapp.api.ApiClient.getWeatherApi();
 
@@ -223,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
         getForecastData(lat, lon);
     }
 
+    //Lấy dữ liệu dự báo thời tiết (5 ngày, chia theo giờ).
     private void getForecastData(double lat, double lon) {
         WeatherApi weatherApi = com.example.weatherapp.api.ApiClient.getWeatherApi();
 
@@ -245,12 +356,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //Cập nhật giao diện thời tiết hiện tại trên màn hình chính
     private void updateCurrentWeather(WeatherResponse weather) {
         locationTextView.setText(weather.getName() + ", " + weather.getSys().getCountry());
         currentTempTextView.setText(String.format(Locale.getDefault(), "%.0f°C", weather.getMain().getTemp()));
 
         if (weather.getWeather() != null && !weather.getWeather().isEmpty()) {
-            weatherDescTextView.setText(weather.getWeather().get(0).getDescription());
+            String description = weather.getWeather().get(0).getDescription();
+            String mainWeather = weather.getWeather().get(0).getMain().toLowerCase();
+            weatherDescTextView.setText(description);
+
+            // Thay đổi nền theo thời tiết
+            updateBackgroundBasedOnWeather(mainWeather);
+
+            // Kiểm tra cảnh báo thời tiết
+            checkWeatherWarnings(weather, mainWeather);
         }
 
         humidityTextView.setText("Độ ẩm: " + weather.getMain().getHumidity() + "%");
@@ -265,8 +385,68 @@ public class MainActivity extends AppCompatActivity {
             sunriseTextView.setText("🌅 Mặt trời mọc: " + sunriseTime);
             sunsetTextView.setText("🌇 Mặt trời lặn: " + sunsetTime);
         }
+
+        // Lưu vị trí cuối cùng cho notification
+        saveLastLocation(weather.getCoord().getLat(), weather.getCoord().getLon());
     }
 
+    private void updateBackgroundBasedOnWeather(String weatherCondition) {
+        GradientDrawable gradient = new GradientDrawable();
+
+        if (weatherCondition.contains("clear")) {
+            // Nắng - gradient vàng cam
+            gradient.setColors(new int[]{0xFFFFD700, 0xFFFFA500});
+        } else if (weatherCondition.contains("rain") || weatherCondition.contains("drizzle")) {
+            // Mưa - gradient xám
+            gradient.setColors(new int[]{0xFF808080, 0xFF696969});
+        } else if (weatherCondition.contains("cloud")) {
+            // Mây - gradient xanh nhạt
+            gradient.setColors(new int[]{0xFF87CEEB, 0xFFB0C4DE});
+        } else if (weatherCondition.contains("snow")) {
+            // Tuyết - gradient trắng xanh
+            gradient.setColors(new int[]{0xFFF0F8FF, 0xFFE6E6FA});
+        } else {
+            // Mặc định - gradient xanh da trời
+            gradient.setColors(new int[]{0xFFE3F2FD, 0xFFBBDEFB});
+        }
+
+        gradient.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        gradient.setCornerRadius(0f);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            rootLayout.setBackground(gradient);
+        } else {
+            rootLayout.setBackgroundDrawable(gradient);
+        }
+    }
+
+    private void checkWeatherWarnings(WeatherResponse weather, String weatherCondition) {
+        double temp = weather.getMain().getTemp();
+
+        if (temp > 35) {
+            showWeatherWarning("Nhiệt độ cao", "Nhiệt độ lên tới " + (int)temp + "°C. Hãy uống nhiều nước!");
+        } else if (temp < 10) {
+            showWeatherWarning("Nhiệt độ thấp", "Trời lạnh " + (int)temp + "°C. Nhớ mặc ấm!");
+        }
+
+        if (weatherCondition.contains("rain") || weatherCondition.contains("storm")) {
+            showWeatherWarning("Mưa", "Trời mưa. Nhớ mang theo ô!");
+        }
+    }
+
+    private void showWeatherWarning(String title, String message) {
+        Toast.makeText(this, "⚠️ " + title + ": " + message, Toast.LENGTH_LONG).show();
+    }
+
+    private void saveLastLocation(double lat, double lon) {
+        SharedPreferences prefs = getSharedPreferences("weather_prefs", MODE_PRIVATE);
+        prefs.edit()
+                .putLong("last_lat", Double.doubleToRawLongBits(lat))
+                .putLong("last_lon", Double.doubleToRawLongBits(lon))
+                .apply();
+    }
+
+    //Xử lý dữ liệu trả về từ API dự báo để hiển thị dự báo theo giờ và 7 ngày tới
     private void updateForecastData(ForecastResponse forecast) {
         List<ForecastResponse.ForecastItem> allItems = forecast.getList();
         List<ForecastResponse.ForecastItem> hourlyItems = new ArrayList<>();
@@ -274,6 +454,7 @@ public class MainActivity extends AppCompatActivity {
 
         long currentTime = System.currentTimeMillis() / 1000;
 
+        // Lấy 12 giờ tiếp theo
         for (ForecastResponse.ForecastItem item : allItems) {
             if (hourlyItems.size() >= 12) break;
 
@@ -282,6 +463,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // Lấy 7 ngày tiếp theo
         Map<String, ForecastResponse.ForecastItem> dailyMap = new HashMap<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String today = dateFormat.format(new Date(currentTime * 1000));

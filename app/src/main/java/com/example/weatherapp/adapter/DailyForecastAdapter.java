@@ -29,7 +29,7 @@ public class DailyForecastAdapter extends RecyclerView.Adapter<DailyForecastAdap
                 .inflate(R.layout.item_daily_forecast, parent, false);
         return new ViewHolder(view);
     }
-
+//liên kết dữ liệu vào từng item hiển thị.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ForecastResponse.ForecastItem item = dailyItems.get(position);

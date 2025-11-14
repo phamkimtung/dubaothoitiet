@@ -1,3 +1,4 @@
+//thông tin thời tiết hiện tại tại thành phố
 package com.example.weatherapp.model;
 
 import com.google.gson.annotations.SerializedName;

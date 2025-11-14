@@ -7,8 +7,7 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-public interface WeatherApi {
-    String BASE_URL = "https://api.openweathermap.org/data/2.5/";
+public interface WeatherApi {    String BASE_URL = "https://api.openweathermap.org/data/2.5/";
     String API_KEY = "65cd5bbb91f8778e2242fbdc4d185eb7";
 
     @GET("weather")

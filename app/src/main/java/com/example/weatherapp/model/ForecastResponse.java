@@ -1,3 +1,4 @@
+//thời tiết 3 giờ/lần trong 5–7 ngày tới
 package com.example.weatherapp.model;
 
 import com.google.gson.annotations.SerializedName;

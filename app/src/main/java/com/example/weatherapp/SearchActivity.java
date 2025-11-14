@@ -31,7 +31,7 @@ public class SearchActivity extends AppCompatActivity {
         confirmButton = findViewById(R.id.confirmButton);
         closeButton = findViewById(R.id.closeButton);
 
-        // Setup confirm button click
+        // xử lý người dùng nhập thành phố
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -44,7 +44,7 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
 
-        // Setup close button click
+        // Đóng Activity hiện tại
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,11 +52,10 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
     }
-
+    // tìm kiếm và trả về thời tiết teho tên thành phố
     private void searchWeatherByCity(String cityName) {
         WeatherApi weatherApi = com.example.weatherapp.api.ApiClient.getWeatherApi();
 
-        // Search city by name
         Call<WeatherResponse> searchCall = weatherApi.searchWeatherByCity(
                 cityName, WeatherApi.API_KEY, "metric", "vi");
 

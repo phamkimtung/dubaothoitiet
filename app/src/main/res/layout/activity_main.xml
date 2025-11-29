@@ -37,6 +37,16 @@
                 android:src="@drawable/ic_favorite"
                 android:contentDescription="Thêm vào yêu thích" />
 
+            <ImageButton
+                android:id="@+id/favoritesListButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_toEndOf="@id/favoriteButton"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_list"
+                android:contentDescription="Danh sách yêu thích" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -45,6 +55,17 @@
                 android:textStyle="bold"
                 android:textColor="#333333"
                 android:layout_centerHorizontal="true" />
+
+            <!-- Các nút bên phải -->
+            <ImageButton
+                android:id="@+id/outfitButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_toStartOf="@id/searchButton"
+                android:layout_marginEnd="8dp"
+                android:background="#FF0000"
+                android:src="@drawable/ic_outfit"
+                android:contentDescription="Gợi ý trang phục AI" />
 
             <ImageButton
                 android:id="@+id/searchButton"
@@ -157,16 +178,6 @@
             android:textColor="#FFFFFF"
             android:layout_marginBottom="16dp"
             android:padding="12dp" />
-        <!-- Trong RelativeLayout header, thêm nút danh sách yêu thích -->
-        <ImageButton
-            android:id="@+id/favoritesListButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_toEndOf="@id/favoriteButton"
-            android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_list"
-            android:contentDescription="Danh sách yêu thích" />
 
         <!-- Hourly Forecast Section -->
         <TextView

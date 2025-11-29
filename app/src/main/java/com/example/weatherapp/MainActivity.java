@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUsingCurrentLocation = true;
     private SharedPreferences favoritesPrefs;
     private ImageButton favoritesListButton;
-
+    private ImageButton outfitButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         checkNotificationPermission();
         startNotificationService();
     }
+
     private void checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -136,12 +137,22 @@ public class MainActivity extends AppCompatActivity {
         favoriteButton = findViewById(R.id.favoriteButton);
         rootLayout = findViewById(R.id.rootLayout);
         favoritesListButton = findViewById(R.id.favoritesListButton);
+        outfitButton = findViewById(R.id.outfitButton);
 
         favoritesListButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, FavoriteCitiesActivity.class);
                 startActivityForResult(intent, SEARCH_REQUEST_CODE);
+            }
+        });
+
+        // QUAN TRỌNG: THÊM CLICK LISTENER CHO NÚT AI
+        outfitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("AI_DEBUG", "outfitButton clicked");
+                openClothingSuggestion();
             }
         });
 
@@ -199,7 +210,48 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void openClothingSuggestion() {
+        Log.d("AI_DEBUG", "openClothingSuggestion called");
+
+        // Lấy thông tin thời tiết hiện tại
+        String location = locationTextView.getText().toString();
+        String temperatureText = currentTempTextView.getText().toString();
+        String weatherDesc = weatherDescTextView.getText().toString();
+
+        Log.d("AI_DEBUG", "Location: " + location);
+        Log.d("AI_DEBUG", "Temperature: " + temperatureText);
+        Log.d("AI_DEBUG", "Weather: " + weatherDesc);
+
+        if (!location.isEmpty() && !temperatureText.isEmpty() && !weatherDesc.isEmpty()) {
+            try {
+                // Extract temperature number từ "25°C"
+                double temperature = Double.parseDouble(temperatureText.replace("°C", ""));
+                Log.d("AI_DEBUG", "Parsed temperature: " + temperature);
+
+                Intent intent = new Intent(MainActivity.this, ClothingSuggestionActivity.class);
+                intent.putExtra("temperature", temperature);
+                intent.putExtra("weather_condition", weatherDesc);
+                intent.putExtra("location", location);
+                startActivity(intent);
+                Log.d("AI_DEBUG", "Started ClothingSuggestionActivity");
+
+                Toast.makeText(this, "Đang mở gợi ý trang phục...", Toast.LENGTH_SHORT).show();
+            } catch (NumberFormatException e) {
+                Log.e("AI_DEBUG", "Number format error: " + e.getMessage());
+                Toast.makeText(this, "Không thể lấy thông tin nhiệt độ", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.e("AI_DEBUG", "Missing weather data");
+            Toast.makeText(this, "Vui lòng chờ dữ liệu thời tiết tải xong", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void startNotificationService() {
+        // Lưu cài đặt bật thông báo
+        SharedPreferences prefs = getSharedPreferences("weather_prefs", MODE_PRIVATE);
+        prefs.edit().putBoolean("notifications_enabled", true).apply();
+
+        // Khởi động service để lên lịch thông báo
         Intent serviceIntent = new Intent(this, WeatherNotificationService.class);
         startService(serviceIntent);
     }
@@ -253,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //Kết quả sau khi xin quyền vị trí xong
+    //Kết quả sau khi xin quyền vị trí xend
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {

@@ -49,7 +49,10 @@
             android:name=".FavoriteCitiesActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
-
+        <activity
+            android:name=".ClothingSuggestionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.Dialog" />
         <!-- Weather Notification Service - exported=false vì chỉ dùng nội bộ -->
         <service
             android:name=".service.WeatherNotificationService"

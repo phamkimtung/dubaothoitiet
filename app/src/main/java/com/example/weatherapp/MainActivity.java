@@ -70,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences favoritesPrefs;
     private ImageButton favoritesListButton;
     private ImageButton outfitButton;
+    private ImageButton chartButton;
+    private ImageButton aqiButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,12 +140,75 @@ public class MainActivity extends AppCompatActivity {
         rootLayout = findViewById(R.id.rootLayout);
         favoritesListButton = findViewById(R.id.favoritesListButton);
         outfitButton = findViewById(R.id.outfitButton);
+        chartButton = findViewById(R.id.chartButton);
+        aqiButton = findViewById(R.id.aqiButton);
+        if (chartButton != null) {
+            chartButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("MainActivity", "Chart button clicked");
+                    openChartActivity();
+                }
+            });
+        } else {
+            Log.e("MainActivity", "chartButton is null!");
+        }
+
+        if (aqiButton != null) {
+            aqiButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("MainActivity", "AQI button clicked");
+                    openAirQualityActivity();
+                }
+            });
+        } else {
+            Log.e("MainActivity", "aqiButton is null!");
+        }
+        Button btnDetailChart = findViewById(R.id.btnDetailChart);
+        Button btnAqiDetail = findViewById(R.id.btnAqiDetail);
+
+        if (btnDetailChart != null) {
+            btnDetailChart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("MainActivity", "Detail Chart button clicked");
+                    openChartActivity();
+                }
+            });
+        }
+
+        if (btnAqiDetail != null) {
+            btnAqiDetail.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("MainActivity", "Detail AQI button clicked");
+                    openAirQualityActivity();
+                }
+            });
+        }
 
         favoritesListButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, FavoriteCitiesActivity.class);
                 startActivityForResult(intent, SEARCH_REQUEST_CODE);
+            }
+        });
+        ImageButton chartButton = findViewById(R.id.chartButton);
+        ImageButton aqiButton = findViewById(R.id.aqiButton);
+
+        chartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openChartActivity();
+            }
+        });
+
+        aqiButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openAirQualityActivity();
             }
         });
 
@@ -304,6 +369,7 @@ public class MainActivity extends AppCompatActivity {
             getCurrentLocation();
         }
     }
+
 
     //Kết quả sau khi xin quyền vị trí xend
     @Override
@@ -496,6 +562,27 @@ public class MainActivity extends AppCompatActivity {
                 .putLong("last_lat", Double.doubleToRawLongBits(lat))
                 .putLong("last_lon", Double.doubleToRawLongBits(lon))
                 .apply();
+    }
+    private void openChartActivity() {
+        Intent intent = new Intent(MainActivity.this, ChartActivity.class);
+        intent.putExtra("lat", currentLat);
+        intent.putExtra("lon", currentLon);
+        startActivity(intent);
+    }
+
+    private void openAirQualityActivity() {
+        try {
+            Log.d("MainActivity", "Opening AirQualityActivity");
+            Intent intent = new Intent(MainActivity.this, AirQualityActivity.class);
+            intent.putExtra("lat", currentLat);
+            intent.putExtra("lon", currentLon);
+            startActivity(intent);
+            Toast.makeText(this, "Đang mở chất lượng không khí...", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e("MainActivity", "Error opening AirQualityActivity: " + e.getMessage());
+            e.printStackTrace();
+            Toast.makeText(this, "Lỗi khi mở chất lượng không khí: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     //Xử lý dữ liệu trả về từ API dự báo để hiển thị dự báo theo giờ và 7 ngày tới

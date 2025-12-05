@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Màu cơ bản -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Màu cho app thời tiết -->
+    <color name="primary_blue">#4A90E2</color>
+    <color name="light_blue">#E3F2FD</color>
+    <color name="dark_blue">#1A237E</color>
+
+    <!-- Màu cho tabs -->
+    <color name="selected_tab">#4A90E2</color>
+    <color name="unselected_tab">#E0E0E0</color>
+
+    <!-- Màu cho AQI -->
+    <color name="aqi_good">#4CAF50</color>
+    <color name="aqi_moderate">#FFC107</color>
+    <color name="aqi_poor">#FF9800</color>
+    <color name="aqi_unhealthy">#F44336</color>
+    <color name="aqi_hazardous">#8B0000</color>
+
+    <!-- Màu text -->
+    <color name="text_primary">#333333</color>
+    <color name="text_secondary">#666666</color>
+    <color name="text_light">#999999</color>
+
+    <!-- Màu nền -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="background_card">#FFFFFF</color>
+
+    <!-- Màu weather -->
+    <color name="weather_sunny">#FFD700</color>
+    <color name="weather_cloudy">#87CEEB</color>
+    <color name="weather_rainy">#808080</color>
+    <color name="weather_snow">#F0F8FF</color>
 </resources>
